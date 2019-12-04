@@ -29,7 +29,7 @@ public class CrcController {
     
     public void ccStart(){
         view.typeStart();
-        model.startWork();
+        model.startWork(this);
         ccFinish();
     }
     public void ccFinish(){
