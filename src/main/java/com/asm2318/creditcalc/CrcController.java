@@ -5,19 +5,19 @@
  */
 package com.asm2318.creditcalc;
 
+import java.io.File;
+import java.net.Socket;
 import java.util.Scanner;
 
-/**
- *
- * @author Алексей
- */
 public class CrcController {
     private CrcModel model;
     private CrcView view;
+    private CrcServer server;
     
-    public CrcController(CrcModel model, CrcView view){
+    public CrcController(CrcModel model, CrcView view, CrcServer server){
         this.model = model;
         this.view = view;
+        this.server = server;
     }
 
     public void ccFirst(){
@@ -35,9 +35,19 @@ public class CrcController {
     public void ccFinish(){
         int code = model.getResult();
         int lost = model.getLost();
-        view.printResult(code, lost);
+        int lostLines = model.getLostLines();
+        view.printResult(code, lost, lostLines);
         if (code==1){
             ccFirst();
+        }else{
+            try{
+                server.fin = true;
+                server.serverSocket.close();
+            }catch (Exception e){}        
         }
+    }
+    
+    public void ccFile(File file){
+        view.fileLoad(file.getName());
     }
 }

@@ -10,12 +10,16 @@ package com.asm2318.creditcalc;
  * @author Алексей
  */
 public class CrcMain {
-
+    static int port=8080;
+    static String ipAddress="127.0.0.1";
     public static void main(String[] args) {
+        CrcServer server = new CrcServer(port);
+        Thread thread = new Thread(server);
+        thread.start();
         CrcModel model = new CrcModel();
+        model.setPort(port, ipAddress);
         CrcView view = new CrcView();
-        CrcController controller = new CrcController(model, view);
+        CrcController controller = new CrcController(model, view, server);
         controller.ccFirst();
-    }
-    
+    }  
 }

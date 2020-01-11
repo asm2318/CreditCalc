@@ -21,13 +21,13 @@ import java.util.Date;
  * @author Алексей
  */
 public class CrcCalculator implements Runnable {
-   String id, paydate, exportPath;
+   String id, paydate, exportPath, resPath;
    double loan, percent, payment;
    boolean annu;
    int term;
+   CrcClientHandler handler;
    
-   
-   CrcCalculator(String id, double loan, double percent, double payment, boolean annu, int term, String paydate, String exportPath){
+   CrcCalculator(String id, double loan, double percent, double payment, boolean annu, int term, String paydate, String exportPath, CrcClientHandler handler){
             this.id = id;
             this.loan = loan;
             this.percent = percent;
@@ -36,6 +36,7 @@ public class CrcCalculator implements Runnable {
             this.term = term;
             this.paydate = paydate;
             this.exportPath = exportPath;
+            this.handler = handler;
         }
    
    
@@ -43,7 +44,11 @@ public class CrcCalculator implements Runnable {
     public void run(){
         calculator();
     }
-        
+     
+    public String result(){
+        calculator();
+        return resPath;
+    }
     
         private void calculator(){
         //System.out.println(id+"//"+loan+"//"+percent+"//"+payment+"//"+annu+"//"+term+"//"+paydate);
@@ -124,9 +129,11 @@ public class CrcCalculator implements Runnable {
                 if (i<dates.size()-1) contents = contents+",";
         }
         contents=contents+"],\"totals\":{\"total_payments\":"+pays.get(pays.size()-1)+",\"total_percents\":"+lper.get(lper.size()-1)+",\"total_basics\":"+lbase.get(lbase.size()-1)+"}}";
-        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(exportPath+id+".json"));
+        resPath = exportPath+id+".json";
+        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(resPath));
         stream.write(contents.getBytes());
         stream.close();
+        //handler.response(fpath);
         /*FileChannel channel = new RandomAccessFile(exportPath+id+".json", "rw").getChannel();
         ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, contents.length());
 
