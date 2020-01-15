@@ -22,6 +22,8 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -239,14 +241,77 @@ public class CrcModel {
             }
            //ExecutorService executor = Executors.newFixedThreadPool(LIMIT); 
             try{
-            Socket socket = new Socket();
+               SocketChannel socket = SocketChannel.open(new InetSocketAddress(ipAddress, port));
+               DataInputStream clientIn = new DataInputStream(socket.socket().getInputStream());
+                DataOutputStream clientOut = new DataOutputStream(socket.socket().getOutputStream());
+               for (int i=j; i<listsize; i++){
+                   String sID = listID.get(i);
+                   String parameters = sID+"&"+listLoan.get(i)+"&"+listPercent.get(i)+
+                "&"+listPayment.get(i)+"&"+listAnnu.get(i)+"&"+listTerm.get(i)+"&"+listPaydate.get(i);
+                String request = "GET /calculate?"+parameters+" HTTP/1.1\r\n\r\n";
+                /*byte[] byteHeader = request.getBytes("UTF-8");
+                ByteBuffer buffer = ByteBuffer.wrap(byteHeader);
+                socket.write(buffer);
+                int stage = 0;
+                    
+                    String header = "";
+                    while (stage == 0){
+                        int bytesRead = socket.read(buffer);
+                        header = new String(buffer.array(), "UTF-8");
+                        stage = 1;
+                        socket.writeInt(stage);
+                    }*/
+                byte[] byteHeader = request.getBytes();
+                clientOut.write(byteHeader,0,request.length());
+                clientOut.flush();
+                    int stage = 0;
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(clientIn));
+                    String header = "";
+                    while (stage == 0){
+                        header = reader.readLine();
+                        stage = 1;
+                        clientOut.writeInt(stage);
+                        clientOut.flush();
+                    }
+                    //System.out.println(header);
+                    if(header.contains("200")){
+                        int answer = 0;
+                        while(stage == 1){
+                        answer = clientIn.readInt();
+                        stage=2;
+                        clientOut.writeInt(stage);
+                        clientOut.flush();
+                        }
+                        String fpath = exportPath+sID+".json";
+                            try {
+                                FileOutputStream out = new FileOutputStream(fpath);
+                                byte[] arr = new byte[answer];
+                                int count;
+                                while (answer>0 && (count = clientIn.read(arr)) > 0) {
+                                    out.write(arr, 0, count);
+                                    answer -= count;
+                                }
+                                out.close();
+
+                            }catch (Exception e){}
+                
+                        File result = new File(fpath);
+                        if(result.exists()){controller.ccFile(result);}
+                    }else{
+                        if (result == 2){result = 4;
+                        }else{result=3;}
+                        lostLines++;
+                        //System.out.println(header);
+                    }
+               }
+            /*Socket socket = new Socket();
             socket.connect(new InetSocketAddress(ipAddress,port), 5000);
             //System.out.println("Connect...");
             DataInputStream clientIn = new DataInputStream(socket.getInputStream());
             //ObjectOutputStream clientOut = new ObjectOutputStream(socket.getOutputStream());
             DataOutputStream clientOut = new DataOutputStream(socket.getOutputStream());
             for (int i=j; i<listsize; i++){
-                //HTTP
+                //HTTP socket
                 String sID = listID.get(i);
                 String parameters = sID+"&"+listLoan.get(i)+"&"+listPercent.get(i)+
                 "&"+listPayment.get(i)+"&"+listAnnu.get(i)+"&"+listTerm.get(i)+"&"+listPaydate.get(i);
@@ -341,8 +406,8 @@ public class CrcModel {
                 }catch (Exception e){}
                 
                 File result = new File(fpath);
-                if(result.exists()){controller.ccFile(result);}*/
-            }
+                if(result.exists()){controller.ccFile(result);}*
+            }*/
             if (half){
                serialize(lists);
                deserialize();

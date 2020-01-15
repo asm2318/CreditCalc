@@ -42,7 +42,8 @@ public class CrcController {
         }else{
             try{
                 server.fin = true;
-                server.serverSocket.close();
+                //server.serverSocket.close();
+                server.serverSocket.socket().close();
             }catch (Exception e){}        
         }
     }

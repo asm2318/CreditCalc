@@ -12,27 +12,25 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.net.Socket;
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
-public class CrcClientHandler implements Runnable {
-  
-    private Socket client;
-    private String exportPath;
-    
-    public CrcClientHandler(Socket client, String exportPath){
-        this.client = client;
-        this.exportPath = exportPath;
-    }
-    
-    public void run(){
-        try{
-            DataInputStream serverIn = new DataInputStream(client.getInputStream());
-            DataOutputStream serverOut = new DataOutputStream(client.getOutputStream());
-            BufferedReader reader = new BufferedReader(new InputStreamReader(serverIn));
-            
-                while(!client.isClosed()){
+public class CrcChannelHandler implements Runnable{
+        private SocketChannel client;
+        private String exportPath;
+        
+        public CrcChannelHandler(SocketChannel client, String exportPath){
+            this.client = client;
+            this.exportPath = exportPath;
+        }
+        
+        public void run(){
+
+                try{
+                DataInputStream serverIn = new DataInputStream(client.socket().getInputStream());
+                DataOutputStream serverOut = new DataOutputStream(client.socket().getOutputStream());
+                BufferedReader reader = new BufferedReader(new InputStreamReader(serverIn));
+                while(!client.socket().isClosed()){
                 String header = reader.readLine();
                     if (header.contains("calculate")){
                         try{
@@ -47,9 +45,7 @@ public class CrcClientHandler implements Runnable {
                         boolean annu = reqPars[4].equals("true");
                         int sTerm = Integer.valueOf(reqPars[5]);
                         String sPaydate = reqPars[6]; 
-                        //serverOut.writeUTF(sID);
-                        //serverOut.flush();
-                        /*CrcCalculator calculator = new CrcCalculator(sID, sLoan, sPercent, sPayment, annu, sTerm, sPaydate, exportPath, this);
+                        CrcCalculator calculator = new CrcCalculator(sID, sLoan, sPercent, sPayment, annu, sTerm, sPaydate, exportPath, this);
                         String resPath = calculator.result();
             
                         File result = new File(resPath);
@@ -76,7 +72,7 @@ public class CrcClientHandler implements Runnable {
                             serverOut.write(arr, 0, count);
                             }
                         serverOut.flush();
-                        in.close();*/
+                        in.close();
                         }catch(Exception e){
                             String response = "HTTP/1.1 501\n\n";
                             byte[] byteHeader = response.getBytes();
@@ -85,41 +81,11 @@ public class CrcClientHandler implements Runnable {
                         }
                     }
                 }
-            
-
-            /* without HTTP
-            ObjectInputStream serverIn = new ObjectInputStream(client.getInputStream());
-            DataOutputStream serverOut = new DataOutputStream(client.getOutputStream());
-            while(!client.isClosed()){
-            ArrayList<Object> lineReceived = (ArrayList<Object>)serverIn.readObject();
-            String sID = (String)lineReceived.get(0);
-            double sLoan = (Double)lineReceived.get(1);
-            double sPercent = (Double)lineReceived.get(2);
-            double sPayment = (Double)lineReceived.get(3);
-            boolean annu = (Boolean)lineReceived.get(4);
-            int sTerm = (Integer)lineReceived.get(5);
-            String sPaydate = (String)lineReceived.get(6); 
-            CrcCalculator calculator = new CrcCalculator(sID, sLoan, sPercent, sPayment, annu, sTerm, sPaydate, exportPath, this);
-            String resPath = calculator.result();
-            //serverOut.writeUTF(sID);
-            //serverOut.flush();
-            
-            File result = new File(resPath);
-            int answer = (int)result.length();
-            serverOut.writeInt(answer);
-            serverOut.flush();
-            byte[] arr = new byte[answer];
-            InputStream in = new FileInputStream(result);
-            int count;
-                while ((count = in.read(arr)) > 0) {
-                serverOut.write(arr, 0, count);
-                }
-            serverOut.flush();
-            in.close();
-            }*/
-            serverIn.close();
-            serverOut.close();
-            client.close();
-        }catch (Exception e){e.printStackTrace();}
-    }
+                serverIn.close();
+                serverOut.close();
+                client.socket().close();
+                }catch(Exception e){}
+                
+            }
+    
 }

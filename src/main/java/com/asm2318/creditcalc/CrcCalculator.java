@@ -25,9 +25,9 @@ public class CrcCalculator implements Runnable {
    double loan, percent, payment;
    boolean annu;
    int term;
-   CrcClientHandler handler;
+   CrcChannelHandler handler;
    
-   CrcCalculator(String id, double loan, double percent, double payment, boolean annu, int term, String paydate, String exportPath, CrcClientHandler handler){
+   CrcCalculator(String id, double loan, double percent, double payment, boolean annu, int term, String paydate, String exportPath, CrcChannelHandler handler){
             this.id = id;
             this.loan = loan;
             this.percent = percent;
