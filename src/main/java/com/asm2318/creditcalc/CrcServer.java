@@ -39,31 +39,17 @@ public class CrcServer implements Runnable{
     public void run(){
         
         executor = Executors.newFixedThreadPool(LIMIT); 
-        /*ServerSocket
-        try{
-            serverSocket = new ServerSocket(port);
-            while(!serverSocket.isClosed()){
-            Socket socket = serverSocket.accept();
-            //System.out.println("Connection established");
-            executor.execute(new CrcClientHandler(socket, exportPath)); 
-            }
-        }catch (Exception e){
-            if(!fin){e.printStackTrace();}
-        }finally{//удалить при разделении клиента и сервера
-            executor.shutdown();
-            //System.out.println("Server closed");
-            System.exit(0);
-        }*/
         try{
         serverSocket = ServerSocketChannel.open();
         serverSocket.bind(new InetSocketAddress(port));
             while(!serverSocket.socket().isClosed()){
                 SocketChannel socket = serverSocket.accept();
+                socket.socket().setSoTimeout(100);
                 executor.execute(new CrcChannelHandler(socket, exportPath)); 
             }
         }catch (Exception e){
             if(!fin){e.printStackTrace();}
-        }finally{//удалить при разделении клиента и сервера
+        }finally{
             executor.shutdown();
             //System.out.println("Server closed");
             System.exit(0);

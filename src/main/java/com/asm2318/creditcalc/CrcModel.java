@@ -13,6 +13,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -26,12 +27,16 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 /**
  *
@@ -116,7 +121,7 @@ public class CrcModel {
         }
     }
     
-    private void importer(File folder){
+    public void importer(File folder){
         listID = new CopyOnWriteArrayList<String>();
         listPaydate = new CopyOnWriteArrayList<String>();
         listLoan = new CopyOnWriteArrayList<String>();
@@ -205,22 +210,23 @@ public class CrcModel {
     private void fillLists(String line){
         CopyOnWriteArrayList<String> listCurr;
         String value="";
-        for (int i=0; i<lists.size(); i++){
-            int n = line.indexOf(";");
-                if (n!=-1){
-                    value = line.substring(0,n);
-                    line = line.substring(n+1);
-                }else{
-                    value = line;
-                }
-            listCurr = lists.get(i);
-            listCurr.add(value);
-        }
-                        
+        if(!line.isEmpty() && !line.equals("")){
+            for (int i=0; i<lists.size(); i++){
+                int n = line.indexOf(";");
+                    if (n!=-1){
+                        value = line.substring(0,n);
+                        line = line.substring(n+1);
+                    }else{
+                        value = line;
+                    }
+                listCurr = lists.get(i);
+                listCurr.add(value);
+            }
+        }              
     }
     
     
-    private void readLists(boolean half, CopyOnWriteArrayList<CopyOnWriteArrayList> object){
+    public void readLists(boolean half, CopyOnWriteArrayList<CopyOnWriteArrayList> object){
         listID = object.get(0);
         listLoan = object.get(1);
         listPercent = object.get(2);
@@ -249,6 +255,7 @@ public class CrcModel {
                    String parameters = sID+"&"+listLoan.get(i)+"&"+listPercent.get(i)+
                 "&"+listPayment.get(i)+"&"+listAnnu.get(i)+"&"+listTerm.get(i)+"&"+listPaydate.get(i);
                 String request = "GET /calculate?"+parameters+" HTTP/1.1\r\n\r\n";
+                //System.out.println("client sends request: "+request);
                 /*byte[] byteHeader = request.getBytes("UTF-8");
                 ByteBuffer buffer = ByteBuffer.wrap(byteHeader);
                 socket.write(buffer);
@@ -296,7 +303,10 @@ public class CrcModel {
                             }catch (Exception e){}
                 
                         File result = new File(fpath);
-                        if(result.exists()){controller.ccFile(result);}
+                        if(result.exists()){
+                            controller.ccFile(result);
+                            //parseJson(result);
+                        }
                     }else{
                         if (result == 2){result = 4;
                         }else{result=3;}
@@ -304,62 +314,7 @@ public class CrcModel {
                         //System.out.println(header);
                     }
                }
-            /*Socket socket = new Socket();
-            socket.connect(new InetSocketAddress(ipAddress,port), 5000);
-            //System.out.println("Connect...");
-            DataInputStream clientIn = new DataInputStream(socket.getInputStream());
-            //ObjectOutputStream clientOut = new ObjectOutputStream(socket.getOutputStream());
-            DataOutputStream clientOut = new DataOutputStream(socket.getOutputStream());
-            for (int i=j; i<listsize; i++){
-                //HTTP socket
-                String sID = listID.get(i);
-                String parameters = sID+"&"+listLoan.get(i)+"&"+listPercent.get(i)+
-                "&"+listPayment.get(i)+"&"+listAnnu.get(i)+"&"+listTerm.get(i)+"&"+listPaydate.get(i);
-                String request = "GET calculate?"+parameters+" HTTP/1.1\n\n";
-                byte[] byteHeader = request.getBytes();
-                clientOut.write(byteHeader,0,request.length());
-                clientOut.flush();
-                    int stage = 0;
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(clientIn));
-                    String header = "";
-                    while (stage == 0){
-                        header = reader.readLine();
-                        stage = 1;
-                        clientOut.writeInt(stage);
-                        clientOut.flush();
-                    }
-                    //System.out.println(header);
-                    if(header.contains("200")){
-                        int answer = 0;
-                        while(stage == 1){
-                        answer = clientIn.readInt();
-                        stage=2;
-                        clientOut.writeInt(stage);
-                        clientOut.flush();
-                        }
-                        String fpath = exportPath+sID+".json";
-                            try {
-                                FileOutputStream out = new FileOutputStream(fpath);
-                                byte[] arr = new byte[answer];
-                                int count;
-                                while (answer>0 && (count = clientIn.read(arr)) > 0) {
-                                    out.write(arr, 0, count);
-                                    answer -= count;
-                                }
-                                out.close();
 
-                            }catch (Exception e){}
-                
-                        File result = new File(fpath);
-                        if(result.exists()){controller.ccFile(result);}
-                    }else{
-                        if (result == 2){result = 4;
-                        }else{result=3;}
-                        lostLines++;
-                        //System.out.println(header);
-                    }
-                    
-                
                 /*without HTTP
                 String sID = listID.get(i);
                 double sLoan = Double.valueOf(listLoan.get(i));
@@ -406,8 +361,8 @@ public class CrcModel {
                 }catch (Exception e){}
                 
                 File result = new File(fpath);
-                if(result.exists()){controller.ccFile(result);}*
-            }*/
+                if(result.exists()){controller.ccFile(result);}*/
+
             if (half){
                serialize(lists);
                deserialize();
@@ -423,7 +378,7 @@ public class CrcModel {
         }
     }
     
-    private void serialize(CopyOnWriteArrayList<CopyOnWriteArrayList> object){
+    public void serialize(CopyOnWriteArrayList<CopyOnWriteArrayList> object){
         try{
         FileOutputStream fos = new FileOutputStream(serialPath+"list.serial");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -434,7 +389,7 @@ public class CrcModel {
     }
     
     
-    private void deserialize(){
+    public void deserialize(){
         try{
         FileInputStream fis = new FileInputStream(serialPath+"list.serial");
         ObjectInputStream ois = new ObjectInputStream(fis);
@@ -442,6 +397,49 @@ public class CrcModel {
         ois.close();
         fis.close();
         readLists(false, object);
+        }catch (Exception e){}
+    }
+    
+    public void parseJson(File file){
+
+        ArrayList<Object> resultList = new ArrayList<Object>();
+        try{
+        Object object = new JSONParser().parse(new FileReader(file));
+        JSONObject json = (JSONObject)object;
+        String sID = (String)json.get("id");
+        double sLoan = (Double)json.get("loan");
+        double sRate = (Double)json.get("rate");
+        double sFirstPay = (Double)json.get("firstpay");
+        String sAnnuity = (String)json.get("annuity");
+        long sTerm = (Long)json.get("term");
+        String sPayDate = (String)json.get("firstpaydate");
+        //System.out.println("NEW CALCULATOR: "+sID+" / Loan: "+sLoan+" / Rate: "+sRate+" / FirstPay: "+sFirstPay+" / Annuity: "+sAnnuity+" / Term: "+sTerm+" / First date: "+sPayDate);
+        ArrayList<String> sDates = new ArrayList<String>();
+        ArrayList<Double> sSumPay = new ArrayList<Double>();
+        ArrayList<Double> sPerPay = new ArrayList<Double>();
+        ArrayList<Double> sBasPay = new ArrayList<Double>();
+        ArrayList<Double> sRest = new ArrayList<Double>();
+        JSONArray shedule = (JSONArray) json.get("shedule");
+        Iterator itrtr = shedule.iterator();
+            while(itrtr.hasNext()){
+                JSONObject shdlObj = (JSONObject)itrtr.next();
+                String tDate = (String)shdlObj.get("date");
+                sDates.add(tDate);
+                double tSum = (Double)shdlObj.get("summ_pay");
+                sSumPay.add(tSum);
+                double tPer = (Double)shdlObj.get("percent_pay");
+                sPerPay.add(tPer);
+                double tBas = (Double)shdlObj.get("basic_pay");
+                sBasPay.add(tBas);
+                double tRest = (Double)shdlObj.get("rest");
+                sRest.add(tRest);
+                //System.out.println(tDate+" / "+tSum+" / "+tPer+" / "+tBas+" / "+tRest);
+            }
+        JSONObject totals = (JSONObject)json.get("totals");
+        double sTotPay = (Double)totals.get("total_payments");
+        double sTotPer = (Double)totals.get("total_percents");
+        double sTotBas = (Double)totals.get("total_basics");
+        //System.out.println("TOTALS// payments: "+sTotPay+" / percents: "+sTotPer+" / base: "+sTotBas);
         }catch (Exception e){}
     }
 }

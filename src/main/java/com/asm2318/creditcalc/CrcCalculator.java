@@ -50,7 +50,7 @@ public class CrcCalculator implements Runnable {
         return resPath;
     }
     
-        private void calculator(){
+        public void calculator(){
         //System.out.println(id+"//"+loan+"//"+percent+"//"+payment+"//"+annu+"//"+term+"//"+paydate);
         double paysumm;
         double nper = percent/100/12;
@@ -117,15 +117,15 @@ public class CrcCalculator implements Runnable {
 
     }
     
-    private void createTable(String id, double loan, double percent, double payment, boolean annu, 
+    public void createTable(String id, double loan, double percent, double payment, boolean annu, 
             int term, String paydate, ArrayList<Date> dates, ArrayList<Double> pays, ArrayList<Double> lper,
             ArrayList<Double> lbase, ArrayList<Double> lrest){
         
         try{
         Format df = new SimpleDateFormat("dd.MM.yyyy");
-        String contents = "{\"id\":"+id+",\"loan\":"+loan+",\"rate\":"+percent+",\"firstpay\":"+payment+",\"annuity\":"+annu+",\"term\":"+term+",\"firstpaydate\":"+paydate+",\"shedule\":[";
+        String contents = "{\"id\":\""+id+"\",\"loan\":"+loan+",\"rate\":"+percent+",\"firstpay\":"+payment+",\"annuity\":\""+annu+"\",\"term\":"+term+",\"firstpaydate\":\""+paydate+"\",\"shedule\":[";
         for (int i=0; i<dates.size(); i++){
-                contents = contents+"{\"date\":"+df.format(dates.get(i))+",\"summ_pay\":"+pays.get(i)+",\"percent_pay\":"+lper.get(i)+",\"basic_pay\":"+lbase.get(i)+",\"rest\":"+lrest.get(i)+"}";
+                contents = contents+"{\"date\":\""+df.format(dates.get(i))+"\",\"summ_pay\":"+pays.get(i)+",\"percent_pay\":"+lper.get(i)+",\"basic_pay\":"+lbase.get(i)+",\"rest\":"+lrest.get(i)+"}";
                 if (i<dates.size()-1) contents = contents+",";
         }
         contents=contents+"],\"totals\":{\"total_payments\":"+pays.get(pays.size()-1)+",\"total_percents\":"+lper.get(lper.size()-1)+",\"total_basics\":"+lbase.get(lbase.size()-1)+"}}";

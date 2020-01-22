@@ -32,6 +32,7 @@ public class CrcChannelHandler implements Runnable{
                 BufferedReader reader = new BufferedReader(new InputStreamReader(serverIn));
                 while(!client.socket().isClosed()){
                 String header = reader.readLine();
+                //System.out.println("Server accepts: "+header);
                     if (header.contains("calculate")){
                         try{
                         String[] request = header.split(" ");
@@ -42,7 +43,7 @@ public class CrcChannelHandler implements Runnable{
                         double sLoan = Double.valueOf(reqPars[1]);
                         double sPercent = Double.valueOf(reqPars[2]);
                         double sPayment = Double.valueOf(reqPars[3]);
-                        boolean annu = reqPars[4].equals("true");
+                        boolean annu = reqPars[4].equals("annu");
                         int sTerm = Integer.valueOf(reqPars[5]);
                         String sPaydate = reqPars[6]; 
                         CrcCalculator calculator = new CrcCalculator(sID, sLoan, sPercent, sPayment, annu, sTerm, sPaydate, exportPath, this);
@@ -79,7 +80,12 @@ public class CrcChannelHandler implements Runnable{
                             serverOut.write(byteHeader,0,response.length());
                             serverOut.flush();
                         }
-                    }
+                    }/*else{
+                      String response = "HTTP/1.1 404\n\n";
+                            byte[] byteHeader = response.getBytes();
+                            serverOut.write(byteHeader,0,response.length());
+                            serverOut.flush();  
+                    }*/
                 }
                 serverIn.close();
                 serverOut.close();

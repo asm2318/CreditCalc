@@ -44,7 +44,7 @@ public class CrcClientHandler implements Runnable {
                         double sLoan = Double.valueOf(reqPars[1]);
                         double sPercent = Double.valueOf(reqPars[2]);
                         double sPayment = Double.valueOf(reqPars[3]);
-                        boolean annu = reqPars[4].equals("true");
+                        boolean annu = reqPars[4].toString().equals("annu");
                         int sTerm = Integer.valueOf(reqPars[5]);
                         String sPaydate = reqPars[6]; 
                         //serverOut.writeUTF(sID);
