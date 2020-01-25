@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -49,8 +48,8 @@ public class CrcModel {
     final String newline = System.getProperty("line.separator");
     final int nl = newline.length();
     int result, lost, lostLines;
-    CopyOnWriteArrayList<String> listID, listPaydate, listLoan, listPercent, listPayment, listTerm, listAnnu;
-    CopyOnWriteArrayList<CopyOnWriteArrayList> lists;
+    ArrayList<String> listID, listPaydate, listLoan, listPercent, listPayment, listTerm, listAnnu, listCurr;
+    ArrayList<ArrayList> lists;
     File importDir, exportDir, serializeDir;
     CrcController controller;
     int port;
@@ -122,14 +121,14 @@ public class CrcModel {
     }
     
     public void importer(File folder){
-        listID = new CopyOnWriteArrayList<String>();
-        listPaydate = new CopyOnWriteArrayList<String>();
-        listLoan = new CopyOnWriteArrayList<String>();
-        listPercent = new CopyOnWriteArrayList<String>();
-        listPayment = new CopyOnWriteArrayList<String>();
-        listTerm = new CopyOnWriteArrayList<String>();
-        listAnnu = new CopyOnWriteArrayList<String>();
-        lists = new CopyOnWriteArrayList<CopyOnWriteArrayList>();
+        listID = new ArrayList<String>();
+        listPaydate = new ArrayList<String>();
+        listLoan = new ArrayList<String>();
+        listPercent = new ArrayList<String>();
+        listPayment = new ArrayList<String>();
+        listTerm = new ArrayList<String>();
+        listAnnu = new ArrayList<String>();
+        lists = new ArrayList<ArrayList>();
         lists.add(listID);
         lists.add(listLoan);
         lists.add(listPercent);
@@ -139,7 +138,6 @@ public class CrcModel {
         lists.add(listPaydate);
         int filesnum = 0;
         String line = "";
-        String value = "";
         String text = "";
         
         for (File f:folder.listFiles()){
@@ -147,21 +145,6 @@ public class CrcModel {
             String fname = f.getName();
             if (fname.endsWith(".csv")){
                 try{
-                    /*DataInputStream stream = new DataInputStream(new BufferedInputStream (new FileInputStream(f)));
-                    while(stream.available()!=0){
-                        line = stream.readLine();
-                        for (int i=0; i<lists.size(); i++){
-                            int n = line.indexOf(";");
-                                if (n!=-1){
-                                value = line.substring(0,n);
-                                line = line.substring(n+1);
-                                    }else{
-                                    value = line;
-                                }
-                            listCurr = lists.get(i);
-                            listCurr.add(value);
-                        }
-                    }*/
                     BufferedInputStream stream = new BufferedInputStream (new FileInputStream(f));
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     int r = 0;
@@ -169,7 +152,7 @@ public class CrcModel {
                         out.write((byte)r);
                     }
                     text = out.toString();
-                    CopyOnWriteArrayList<Integer> lines = new CopyOnWriteArrayList<Integer>();
+                    ArrayList<Integer> lines = new ArrayList<Integer>();
                     if (text.contains(newline)){
                         for(int i=0; i<text.length(); i++){
                             if (text.charAt(i)==newline.charAt(0)) lines.add(i);
@@ -208,7 +191,7 @@ public class CrcModel {
         }
     }
     private void fillLists(String line){
-        CopyOnWriteArrayList<String> listCurr;
+        
         String value="";
         if(!line.isEmpty() && !line.equals("")){
             for (int i=0; i<lists.size(); i++){
@@ -226,7 +209,7 @@ public class CrcModel {
     }
     
     
-    public void readLists(boolean half, CopyOnWriteArrayList<CopyOnWriteArrayList> object){
+    public void readLists(boolean half, ArrayList<ArrayList> object){
         listID = object.get(0);
         listLoan = object.get(1);
         listPercent = object.get(2);
@@ -378,7 +361,7 @@ public class CrcModel {
         }
     }
     
-    public void serialize(CopyOnWriteArrayList<CopyOnWriteArrayList> object){
+    public void serialize(ArrayList<ArrayList> object){
         try{
         FileOutputStream fos = new FileOutputStream(serialPath+"list.serial");
             ObjectOutputStream oos = new ObjectOutputStream(fos);
@@ -393,7 +376,7 @@ public class CrcModel {
         try{
         FileInputStream fis = new FileInputStream(serialPath+"list.serial");
         ObjectInputStream ois = new ObjectInputStream(fis);
-        CopyOnWriteArrayList<CopyOnWriteArrayList> object = (CopyOnWriteArrayList)ois.readObject();
+        ArrayList<ArrayList> object = (ArrayList)ois.readObject();
         ois.close();
         fis.close();
         readLists(false, object);

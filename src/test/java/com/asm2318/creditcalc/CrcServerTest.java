@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.json.simple.JSONArray;
@@ -117,17 +116,17 @@ static String ipAddress="127.0.0.1";
         try{
             createThreeTestFiles();
             CrcModel firstClient = spy(new CrcModel());
-            Mockito.doNothing().when(firstClient).readLists(Matchers.any(Boolean.class),Matchers.any(CopyOnWriteArrayList.class));
+            Mockito.doNothing().when(firstClient).readLists(Matchers.any(Boolean.class),Matchers.any(ArrayList.class));
             firstClient.importer(new File(importPath));
-            CopyOnWriteArrayList n3Result = firstClient.lists;
+            ArrayList n3Result = firstClient.lists;
             assertEquals(n3Result.size(), 7);
-            CopyOnWriteArrayList<String> listID = (CopyOnWriteArrayList<String>)n3Result.get(0);
-            CopyOnWriteArrayList<String> listLoan = (CopyOnWriteArrayList<String>)n3Result.get(1);
-            CopyOnWriteArrayList<String> listPercent = (CopyOnWriteArrayList<String>)n3Result.get(2);
-            CopyOnWriteArrayList<String> listPayment = (CopyOnWriteArrayList<String>)n3Result.get(3);
-            CopyOnWriteArrayList<String> listAnnu = (CopyOnWriteArrayList<String>)n3Result.get(4);
-            CopyOnWriteArrayList<String> listTerm = (CopyOnWriteArrayList<String>)n3Result.get(5);
-            CopyOnWriteArrayList<String> listPaydate = (CopyOnWriteArrayList<String>)n3Result.get(6);
+            ArrayList<String> listID = (ArrayList<String>)n3Result.get(0);
+            ArrayList<String> listLoan = (ArrayList<String>)n3Result.get(1);
+            ArrayList<String> listPercent = (ArrayList<String>)n3Result.get(2);
+            ArrayList<String> listPayment = (ArrayList<String>)n3Result.get(3);
+            ArrayList<String> listAnnu = (ArrayList<String>)n3Result.get(4);
+            ArrayList<String> listTerm = (ArrayList<String>)n3Result.get(5);
+            ArrayList<String> listPaydate = (ArrayList<String>)n3Result.get(6);
 
                 assertEquals(listID.size(), listPaydate.size(), 6);
                 assertEquals(listLoan.size(), listPercent.size(), 6);
@@ -176,12 +175,12 @@ static String ipAddress="127.0.0.1";
             firstClient.exportPath = exportPath;
             File export = new File(exportPath);
             if(!export.exists()) export.mkdir();
-            Mockito.doNothing().when(firstClient).serialize(Matchers.any(CopyOnWriteArrayList.class));
+            Mockito.doNothing().when(firstClient).serialize(Matchers.any(ArrayList.class));
             Mockito.doNothing().when(firstClient).deserialize();
             
             //четное количество
                 try{
-                    CopyOnWriteArrayList<CopyOnWriteArrayList> lists = filledList(4,1,2);
+                    ArrayList<ArrayList> lists = filledList(4,1,2);
                     firstClient.readLists(true, lists);
                     File positive = new File(exportPath+"n4test0101.json");
                     File negative = new File(exportPath+"n4test0102.json");
@@ -191,7 +190,7 @@ static String ipAddress="127.0.0.1";
                 }
             //нечетное количество > 1
                 try{
-                    CopyOnWriteArrayList<CopyOnWriteArrayList> lists = filledList(4,2,3);
+                    ArrayList<ArrayList> lists = filledList(4,2,3);
                     firstClient.readLists(true, lists);
                     File positive = new File(exportPath+"n4test0201.json");
                     File negative1 = new File(exportPath+"n4test0202.json");
@@ -202,7 +201,7 @@ static String ipAddress="127.0.0.1";
                 }
             //список с единственным значением
                 try{
-                    CopyOnWriteArrayList<CopyOnWriteArrayList> lists = filledList(4,3,1);
+                    ArrayList<ArrayList> lists = filledList(4,3,1);
                     firstClient.readLists(true, lists);
                     File positive = new File(exportPath+"n4test0301.json");
                     if (!positive.exists()) fail ("Ошибка теста № 4 при обработке списка с единственным значением");
@@ -229,7 +228,7 @@ static String ipAddress="127.0.0.1";
             firstClient.serialPath = serialPath;
             File serDir = new File(serialPath);
             if(!serDir.exists()) serDir.mkdir();
-            CopyOnWriteArrayList<CopyOnWriteArrayList> lists = filledList(5,1,2);
+            ArrayList<ArrayList> lists = filledList(5,1,2);
             System.out.println("Тест № 5: сериализация четного списка");
             try{
             firstClient.serialize(lists);
@@ -664,8 +663,7 @@ static String ipAddress="127.0.0.1";
             }
     }
     
-    @Test(timeout=35000) //Тест № 18. Клиент - проверка времени чтения файла с количеством строк около 100 тыс.
-    //таймаут должен быть уменьшен при раскрытии секрета быстрого парсинга
+    @Test(timeout=10000) //Тест № 18. Клиент - проверка времени чтения файла с количеством строк около 100 тыс.
     public void testRClientRead100k(){
         try{
             Thread.sleep(2000);
@@ -682,9 +680,9 @@ static String ipAddress="127.0.0.1";
                         
             final long start = System.currentTimeMillis();
             CrcModel firstClient = spy(new CrcModel());
-            Mockito.doNothing().when(firstClient).readLists(Matchers.any(Boolean.class),Matchers.any(CopyOnWriteArrayList.class));
+            Mockito.doNothing().when(firstClient).readLists(Matchers.any(Boolean.class),Matchers.any(ArrayList.class));
             firstClient.importer(new File(importPath));
-            CopyOnWriteArrayList result = firstClient.lists.get(0);
+            ArrayList result = firstClient.lists.get(0);
             assertTrue(result.size()>99999);
             long finish = System.currentTimeMillis();
             System.out.println("Тест № 18 завершен. Время чтения 100 тыс. записей - "+(int)(finish-start)/1000+" сек., размер списка - "+result.size()+" строк");
@@ -811,15 +809,15 @@ static String ipAddress="127.0.0.1";
         thread.start();
     }
     
-    public CopyOnWriteArrayList filledList(int test, int stage, int size){
-            CopyOnWriteArrayList<String> listID = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<String> listPaydate = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<String> listLoan = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<String> listPercent = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<String> listPayment = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<String> listTerm = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<String> listAnnu = new CopyOnWriteArrayList<String>();
-            CopyOnWriteArrayList<CopyOnWriteArrayList> lists = new CopyOnWriteArrayList<CopyOnWriteArrayList>();
+    public ArrayList filledList(int test, int stage, int size){
+            ArrayList<String> listID = new ArrayList<String>();
+            ArrayList<String> listPaydate = new ArrayList<String>();
+            ArrayList<String> listLoan = new ArrayList<String>();
+            ArrayList<String> listPercent = new ArrayList<String>();
+            ArrayList<String> listPayment = new ArrayList<String>();
+            ArrayList<String> listTerm = new ArrayList<String>();
+            ArrayList<String> listAnnu = new ArrayList<String>();
+            ArrayList<ArrayList> lists = new ArrayList<ArrayList>();
             lists.add(listID);
             lists.add(listLoan);
             lists.add(listPercent);
