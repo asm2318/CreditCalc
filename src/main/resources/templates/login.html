@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>Авторизация</title></head>
+<body>
+
+<form method="post" action="/login">
+	<input type="text" placeholder="Логин" name="login" th:required="required"/>
+	<input type="password" placeholder="Пароль" name="password"/>
+	<button type="submit">Войти</button>
+</form>
+</body>
+</html>

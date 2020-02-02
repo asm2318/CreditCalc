@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Параметры для расчета</title>
+    </head>
+    <body>
+        <div>User: <span th:text="${login}"></span></div>
+        <form method="post" action="/count">
+        <input type="hidden" th:value="${login}" name="login"/>
+        <p><b>Сумма кредита: <input type="number" min="100000" value="100000.00" name="summ" th:required="required"/></b></p>
+	<p><b>Процентная ставка: <input type="number" min="5" value="5.00" step="0.01" name="rate" th:required="required"/></b></p>
+        <p><b>Размер первого платежа: <input type="number" min="0" name="firstpay" placeholder="Необязательно"/></b></p>
+        <p><b>Тип платежа: <select size="1" name="type"> 
+                    <option value="true">Аннуитетный</option>
+                    <option value="false">Дифференцированный</option>
+                </select></b></p>
+        <p><b>Срок кредита (мес.): <input type="number" min="6" value="6" step="1" name="term" th:required="required"/></b></p>
+        <p><b>Дата первого платежа: <input type="date" id="dateFirst" name="date" th:required="required"/></b></p>
+	<button type="submit">Рассчитать</button>
+        </form>         
+    </body>
+</html>

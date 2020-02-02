@@ -6,6 +6,7 @@
 package com.asm2318.creditcalc;
 
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,13 +22,13 @@ import java.util.Date;
  * @author Алексей
  */
 public class CrcCalculator implements Runnable {
-   String id, paydate, exportPath, resPath;
+   String id, paydate, exportPath, resPath, json;
    double loan, percent, payment;
    boolean annu;
    int term;
-   CrcChannelHandler handler;
+   File resultFile;
    
-   CrcCalculator(String id, double loan, double percent, double payment, boolean annu, int term, String paydate, String exportPath, CrcChannelHandler handler){
+   CrcCalculator(String id, double loan, double percent, double payment, boolean annu, int term, String paydate){
             this.id = id;
             this.loan = loan;
             this.percent = percent;
@@ -35,8 +36,7 @@ public class CrcCalculator implements Runnable {
             this.annu = annu;
             this.term = term;
             this.paydate = paydate;
-            this.exportPath = exportPath;
-            this.handler = handler;
+            //this.exportPath = exportPath;
         }
    
    
@@ -47,7 +47,7 @@ public class CrcCalculator implements Runnable {
      
     public String result(){
         calculator();
-        return resPath;
+        return json;
     }
     
         public void calculator(){
@@ -129,10 +129,12 @@ public class CrcCalculator implements Runnable {
                 if (i<dates.size()-1) contents = contents+",";
         }
         contents=contents+"],\"totals\":{\"total_payments\":"+pays.get(pays.size()-1)+",\"total_percents\":"+lper.get(lper.size()-1)+",\"total_basics\":"+lbase.get(lbase.size()-1)+"}}";
-        resPath = exportPath+id+".json";
+        json = contents;
+        /*resPath = exportPath+id+".json";
         BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(resPath));
         stream.write(contents.getBytes());
         stream.close();
+        //resultFile = new File(resPath);
         //handler.response(fpath);
         /*FileChannel channel = new RandomAccessFile(exportPath+id+".json", "rw").getChannel();
         ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, contents.length());

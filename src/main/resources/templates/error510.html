@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Параметры для расчета</title>
+    </head>
+    <body>
+        <div>User: <span th:text="${login}"></span></div>
+        <form method="post" action="/count">
+        <input type="hidden" th:value="${login}" name="login"/>
+        <p><b>Сумма кредита: <input type="number" min="100000" th:value="${summ}" name="summ" th:required="required"/></b></p>
+	<p><b>Процентная ставка: <input type="number" min="5" th:value="${rate}" step="0.01" name="rate" th:required="required"/></b></p>
+        <p><b>Размер первого платежа: <input type="number" min="0" th:value="${firstpay}" name="firstpay"/></b></p>
+        <p><b>Тип платежа: <select size="1" name="type" th:value="${type}"> 
+                    <option value="true">Аннуитетный</option>
+                    <option value="false">Дифференцированный</option>
+                </select></b></p>
+        <p><b>Срок кредита (мес.): <input type="number" min="6" th:value="${term}" step="1" name="term" th:required="required"/></b></p>
+        <p><b>Дата первого платежа: <input type="date" id="dateFirst" th:value="${date}" name="date" th:required="required"/></b></p>
+	<button type="submit">Рассчитать</button>
+        </form>  
+        <p><font color="red">Ошибка при интерпретации данных.<br/>Убедитесь в корректности заполненных значений.</font></p>
+    </body>
+</html>

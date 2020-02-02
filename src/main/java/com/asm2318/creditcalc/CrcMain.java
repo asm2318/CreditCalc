@@ -5,11 +5,12 @@
  */
 package com.asm2318.creditcalc;
 
-/**
- *
- * @author Алексей
- */
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
 public class CrcMain {
+    /*non web
     static int port=8080;
     static String ipAddress="127.0.0.1";
     public static void main(String[] args) {
@@ -21,5 +22,9 @@ public class CrcMain {
         CrcView view = new CrcView();
         CrcController controller = new CrcController(model, view, server);
         controller.ccFirst();
-    }  
+    }  */
+    public static void main(String[] args) {
+        SpringApplication.run(CrcMain.class, args);
+    }
+    
 }
