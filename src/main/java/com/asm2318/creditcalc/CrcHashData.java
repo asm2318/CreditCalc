@@ -7,7 +7,7 @@ package com.asm2318.creditcalc;
 
 public class CrcHashData {
     private String login;
-    int hashpswrd;
+    private String hashpswrd;
     
     public String getLogin(){
         return login;
@@ -16,10 +16,10 @@ public class CrcHashData {
         this.login = login;
     }
     
-    public int getHashpswrd(){
+    public String getHashpswrd(){
         return hashpswrd;
     }
-    public void setHashpswrd(int hashpswrd){
+    public void setHashpswrd(String hashpswrd){
         this.hashpswrd = hashpswrd;
     }
 }

@@ -6,7 +6,7 @@
 package com.asm2318.creditcalc;
 
 public class CrcRequestData {
-    private String summ, rate, firstpay, type, term, date, login;
+    private String summ, rate, firstpay, type, term, date, login, updaterole, updateuser, dateStart, dateFinish;
     
     public String getSumm(){
         return summ;
@@ -49,5 +49,29 @@ public class CrcRequestData {
     }
     public void setLogin(String login){
         this.login = login;
+    }
+    public String getUpdaterole(){
+        return updaterole;
+    }
+    public void setUpdaterole(String updaterole){
+        this.updaterole = updaterole;
+    }
+    public String getUpdateuser(){
+        return updateuser;
+    }
+    public void setUpdateuser(String updateuser){
+        this.updateuser = updateuser;
+    }
+    public String getDateStart(){
+        return dateStart;
+    }
+    public void setDateStart(String dateStart){
+        this.dateStart = dateStart;
+    }
+    public String getDateFinish(){
+        return dateFinish;
+    }
+    public void setDateFinish(String dateFinish){
+        this.dateFinish = dateFinish;
     }
 }

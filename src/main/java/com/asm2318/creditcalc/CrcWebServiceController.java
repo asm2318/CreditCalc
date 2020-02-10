@@ -11,15 +11,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
+import static org.springframework.jdbc.core.JdbcOperationsExtensionsKt.query;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,44 +38,77 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class CrcWebServiceController {
-    private static final String LOGIN = "admin";
-    private static final String PASSWORD = "admin";
     String loggingPath = ".\\_admin_log.txt";
     private static HttpServletRequest request;
     
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+    
+    @Autowired
+    public void setRequest(HttpServletRequest request) {
+        this.request = request;
+    }
+    
     @GetMapping("/")
-    public String hello(){ return "login";}
+    public String hello(){ return "/customLogin";}
     
     @GetMapping("/onceagain")
-    public ModelAndView onceAgain(CrcHashData hashData){
-        return new ModelAndView("user", Collections.singletonMap("login", hashData.getLogin()));
-    }
-    
+    public ModelAndView onceAgain(Authentication authentication){
+        return new ModelAndView("user", Collections.singletonMap("login", authentication.getName()));
+    }  
+     
     @GetMapping("/showrequests")
-    public ModelAndView showRequests(CrcHashData hashData){
+    public ModelAndView showRequests(Authentication authentication, CrcRequestData data){
         try{
+            String dateStart = data.getDateStart();
+            String dateFinish = data.getDateFinish();
         Map response = new HashMap();
-            response.put("result", logReader());
-            response.put("login", hashData.getLogin());
+            response.put("result", logReader(dateStart, dateFinish));
+            response.put("login", authentication.getName());
+            response.put("previousStart", dateStart);
+            response.put("previousFinish", dateFinish);
         return new ModelAndView("admin_show", response);
         }catch(Exception e){
-            return new ModelAndView("admin", Collections.singletonMap("login", hashData.getLogin()));
+            //System.out.println("ERROR: "+e);
+            return new ModelAndView("admin", Collections.singletonMap("login", authentication.getName()));
         }
     }
     
-    @PostMapping("/login")
-    public ModelAndView login (CrcLoginData loginData){
-        if (LOGIN.equals(loginData.getLogin())){
-            
-            if(PASSWORD.equals(loginData.getPassword())){
-            return new ModelAndView("admin", Collections.singletonMap("login", loginData.getLogin()));
-            }else{
-            return new ModelAndView("failure", Collections.singletonMap("login", loginData.getLogin()));
-            }
+    @GetMapping("/showusers")
+    public ModelAndView showUsers(Authentication authentication){
+        try{
+        Map response = new HashMap(); 
+            response.put("login", authentication.getName());
+            List<String> users = sqlReader("USERNAME", "USERS", "USERNAME");
+            List<String> emails = sqlReader("EMAIL", "USERS", "USERNAME");
+            List<String> states = sqlReader("ENABLED", "USERS", "USERNAME");
+            List<String> roles = sqlReader("ROLE", "USERS_ROLES", "USERNAME");
+            String result = userJsonBuilder(users, emails, states, roles);
+            response.put("result", result);
+        return new ModelAndView("admin_users", response);
+        }catch(Exception e){
+            return new ModelAndView("admin", Collections.singletonMap("login", authentication.getName()));
         }
-        return new ModelAndView("user", Collections.singletonMap("login", loginData.getLogin()));
     }
     
+    @GetMapping("/administrate")
+    public ModelAndView administrate(Authentication authentication, CrcRequestData data){
+        String updaterole=data.getUpdaterole();
+        String updateuser=data.getUpdateuser();
+        String sqlQuery = "update USERS_ROLES set ROLE=? where USERNAME=?";
+        jdbcTemplate.update(sqlQuery, updaterole, updateuser);
+        return showUsers(authentication);
+    }
+    
+    @GetMapping("/login")
+    public ModelAndView login (Authentication authentication){
+        boolean admin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ADMIN"));
+        if(admin){
+            return new ModelAndView("admin", Collections.singletonMap("login", authentication.getName()));
+        }
+        return new ModelAndView("user", Collections.singletonMap("login", authentication.getName()));
+    }
+        
     @PostMapping("/count")
     public ModelAndView mvRequest (CrcRequestData requestData){
         Date currentDate = new Date();
@@ -114,7 +156,7 @@ public class CrcWebServiceController {
             return new ModelAndView("error510", response);
         }
     }
-    
+   
     @ResponseBody
     @PostMapping("/message")
     public CrcOutputResource sendMessage(@RequestBody CrcInputResource inputResource){
@@ -141,7 +183,7 @@ public class CrcWebServiceController {
         return changedDate;
     }
     
-    public void logger (String time, String login, String ip, String uri, String params, String state, int size){
+    /*public void logger (String time, String login, String ip, String uri, String params, String state, int size){
         File fileLog = new File(loggingPath);
         String log = "";
             try{
@@ -157,9 +199,22 @@ public class CrcWebServiceController {
                     writer.close();
                 }
             }catch (Exception e){System.out.println("Fail to log: "+time+"//"+login+"//"+state+": "+e);}
+    }*/
+    
+    public void logger (String time, String login, String ip, String uri, String params, String state, int size){
+        String id = time+"_"+login;
+        String sqlQuery = "insert into REQUESTSLOG values (?,?,?,?,?,?,?,?,?)";
+            try{
+                time=time.replace('/', '-');
+                SimpleDateFormat fdate = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+                Date dateA = fdate.parse(time);
+                java.sql.Timestamp tstamp= new java.sql.Timestamp(dateA.getTime());
+                java.sql.Date keydate = new java.sql.Date(dateA.getTime());
+                jdbcTemplate.update(sqlQuery, id, tstamp, login, ip, uri, params, state, size, keydate);
+            }catch (Exception e){System.out.println("Fail to log: "+time+"//"+login+"//"+state+": "+e);}
     }
     
-    private String logReader(){
+    /*private String logReader(){
         String log="[";
         File fileLog = new File(loggingPath);
             try{
@@ -174,12 +229,150 @@ public class CrcWebServiceController {
                     log += "]";                             
             }catch (Exception e){ System.out.println("Fail to read log: "+e); }  
         return log;
+    }*/
+    
+    private String logReader(String dateStart, String dateFinish){
+        String log="";
+        try{
+            if (dateStart.isEmpty() && dateFinish.isEmpty()){
+                List<String> listTime = sqlReader("DATETIME", "REQUESTSLOG", "ID");
+                List<String> listUsers = sqlReader("USERNAME", "REQUESTSLOG", "ID");
+                List<String> listAddress = sqlReader("IPADDRESS", "REQUESTSLOG", "ID");
+                List<String> listURI = sqlReader("URI", "REQUESTSLOG", "ID");
+                List<String> listParams = sqlReader("PARAMS", "REQUESTSLOG", "ID");
+                List<String> listResult = sqlReader("RESULT", "REQUESTSLOG", "ID");
+                List<String> listSize = sqlReader("RESULTSIZE", "REQUESTSLOG", "ID");
+                log = historyJsonBuilder(listTime, listUsers, listAddress, listURI, listParams, listResult, listSize);
+            }else if (!dateStart.isEmpty() && dateFinish.isEmpty()){
+                /*dateStart = dateStart.replace('/', '-');
+                SimpleDateFormat fdate = new SimpleDateFormat("yyyy-MM-dd");
+                Date dateA = fdate.parse(dateStart);
+                java.sql.Timestamp tstamp= new java.sql.Timestamp(dateA.getTime());*/
+                List<String> listTime = sqlReader("DATETIME", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                List<String> listUsers = sqlReader("USERNAME", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                List<String> listAddress = sqlReader("IPADDRESS", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                List<String> listURI = sqlReader("URI", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                List<String> listParams = sqlReader("PARAMS", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                List<String> listResult = sqlReader("RESULT", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                List<String> listSize = sqlReader("RESULTSIZE", "REQUESTSLOG", "ID", sqlDate(dateStart), true);
+                log = historyJsonBuilder(listTime, listUsers, listAddress, listURI, listParams, listResult, listSize);
+            }else if (dateStart.isEmpty() && !dateFinish.isEmpty()){
+                List<String> listTime = sqlReader("DATETIME", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                List<String> listUsers = sqlReader("USERNAME", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                List<String> listAddress = sqlReader("IPADDRESS", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                List<String> listURI = sqlReader("URI", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                List<String> listParams = sqlReader("PARAMS", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                List<String> listResult = sqlReader("RESULT", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                List<String> listSize = sqlReader("RESULTSIZE", "REQUESTSLOG", "ID", sqlDate(dateFinish), false);
+                log = historyJsonBuilder(listTime, listUsers, listAddress, listURI, listParams, listResult, listSize);
+            }else{
+                List<String> listTime = sqlReader("DATETIME", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                List<String> listUsers = sqlReader("USERNAME", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                List<String> listAddress = sqlReader("IPADDRESS", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                List<String> listURI = sqlReader("URI", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                List<String> listParams = sqlReader("PARAMS", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                List<String> listResult = sqlReader("RESULT", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                List<String> listSize = sqlReader("RESULTSIZE", "REQUESTSLOG", "ID", sqlDate(dateStart), sqlDate(dateFinish));
+                log = historyJsonBuilder(listTime, listUsers, listAddress, listURI, listParams, listResult, listSize);
+            }
+        }catch (Exception e){
+        System.out.println("ERROR: "+e);
+        }
+        return log;
     }
     
-        @Autowired
-    public void setRequest(HttpServletRequest request) {
-        this.request = request;
+    public String sqlDate(String baseDate){
+        String changedDate;
+        //System.out.println("BASE: "+baseDate);
+        int n = baseDate.indexOf("-");
+        String dd = "";
+        String mm = "";
+        String yyyy = "";
+
+        if (n!=-1){
+            yyyy = baseDate.substring(0,n);
+            changedDate = baseDate.substring(n+1);
+            int m = changedDate.indexOf("-");
+            if(m!=-1){
+               mm = changedDate.substring(0,m);
+               dd = changedDate.substring(m+1);
+            }
+        }
+        
+        if (mm.equals("01")){
+            mm="JAN";
+        }else if (mm.equals("02")){
+            mm="FEB"; 
+        }else if (mm.equals("03")){
+            mm="MAR";
+        }else if (mm.equals("04")){
+            mm="APR";
+        }else if (mm.equals("05")){
+            mm="MAY";
+        }else if (mm.equals("06")){
+            mm="JUN";
+        }else if (mm.equals("07")){
+            mm="JUL";
+        }else if (mm.equals("08")){
+            mm="AUG";
+        }else if (mm.equals("09")){
+            mm="SEP";
+        }else if (mm.equals("10")){
+            mm="OCT";
+        }else if (mm.equals("11")){
+            mm="NOV";
+        }else if (mm.equals("12")){
+            mm="DEC";
+        }
+        
+        changedDate = dd+"-"+mm+"-"+yyyy;
+        //System.out.println("CHANGED: "+changedDate);
+        return changedDate;
     }
+    
+    private List<String> sqlReader(String column, String table, String order){
+        String sqlQuery = "select "+column+" from "+table+" order by "+order;
+        List<String> list = jdbcTemplate.queryForList(sqlQuery, String.class);
+        return list;
+    }
+    
+    private List<String> sqlReader(String column, String table, String order, String tstamp, boolean start){
+        String sqlQuery = "select "+column+" from "+table+" where KEYDATE ";
+        if (start){
+            sqlQuery += ">= '"+tstamp+"'";
+        }else{
+            sqlQuery += "<= '"+tstamp+"'";
+        }
+        sqlQuery += " order by "+order;
+        List<String> list = jdbcTemplate.queryForList(sqlQuery, String.class);
+        return list;
+    }
+    
+    private List<String> sqlReader(String column, String table, String order, String start, String finish){
+        String sqlQuery = "select "+column+" from "+table+" where KEYDATE >= '" +start+"' and KEYDATE <= '"+finish+"' order by "+order;
+        List<String> list = jdbcTemplate.queryForList(sqlQuery, String.class);
+        return list;
+    }
+    
+    private String userJsonBuilder(List<String> login, List<String> email, List<String> state, List<String> role){
+        String result="[";
+            for (int i=0; i<login.size(); i++){
+                result += "{\"username\":\""+login.get(i)+"\",\"email\":\""+email.get(i)+"\",\"enabled\":\""+state.get(i)+"\",\"role\":\""+role.get(i)+"\"},";
+            }
+            result = result.substring(0,result.length()-1);
+            result += "]";
+        return result;
+    }
+        
+    private String historyJsonBuilder(List<String> listTime, List<String> listUsers, List<String> listAddress, List<String> listURI, List<String> listParams, List<String> listResult, List<String> listSize){
+        String result="[";
+            for (int i=0; i<listTime.size(); i++){
+                result += "{\"time\":\""+listTime.get(i)+"\",\"login\":\""+listUsers.get(i)+"\",\"ip\":\""+listAddress.get(i)+"\",\"uri\":\""+listURI.get(i)+"\",\"params\":\""+listParams.get(i)+"\",\"state\":\""+listResult.get(i)+"\",\"size\":"+listSize.get(i)+"},";
+            }
+            result = result.substring(0,result.length()-1);
+            result += "]";
+        return result;
+    }   
 
     private static String getClientIp() {
         String remoteAddr = "";
@@ -199,5 +392,7 @@ public class CrcWebServiceController {
         }
         return requestURI;
     }
+        
+    
     
 }

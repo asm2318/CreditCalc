@@ -14,27 +14,22 @@ and open the template in the editor.
     </head>
     <body>
         <p>Страница администратор: <span th:text="${login}"></span></p>
-        <form method="get" action="/showrequests">
-                <input type="hidden" th:value="${login}" name="login"/>
-                <button type="submit">Показать</button>
+        <form method="get" action="/showrequests" id="history">
+                <input type="hidden" th:value="${
+            T(org.springframework.security.core.context.SecurityContextHolder)
+            .context.authentication.principal.username}" name="login"/>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit">Итория запросов</button>
+                <b>Начало периода:</b><input type="date" name="dateStart" form="history"/>
+                <b>Конец периода:</b><input type="date" name="dateFinish" form="history"/>
         </form>
-        <div class="container">
-            <div class="table-responsive">
-                <h1>Статистика запросов</h1>
-                <br />
-                
-                <table class="table table-bordered table-striped" id="stats">
-                    <tr>
-                        <th>Время запроса</th>
-                        <th>Пользователь</th>
-                        <th>ip-адрес</th>
-                        <th>URI</th>
-                        <th>Параметры</th>
-                        <th>Результат</th>
-                        <th>Размер результата, байт</th>
-                    </tr>
-                </table>
-            </div>
-        </div>        
+        
+        <form method="get" action="/showusers">
+                <input type="hidden" th:value="${
+            T(org.springframework.security.core.context.SecurityContextHolder)
+            .context.authentication.principal.username}" name="login"/>
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit">Учетные записи</button>
+        </form>
     </body>
 </html>

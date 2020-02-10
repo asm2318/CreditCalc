@@ -1,0 +1,17 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.asm2318.creditcalc;
+
+import java.util.LinkedList;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CrcUserRepository extends JpaRepository <CrcUser, String> {
+    CrcUser findByEmail(String email);
+    CrcUser findByUsername(String login);
+}
