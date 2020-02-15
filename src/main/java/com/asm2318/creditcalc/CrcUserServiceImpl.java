@@ -32,7 +32,7 @@ public class CrcUserServiceImpl implements CrcUserService {
         user.setPassword(passwordGenerator(userDto.getPassword()));
         user.setEmail(userDto.getEmail());
         user.setEnabled("true");
-        user.setRoles(Arrays.asList(new CrcRole("USER")));
+        user.setRole(new CrcRole("USER"));
         return repository.save(user); 
     }
     

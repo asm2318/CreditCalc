@@ -6,6 +6,7 @@
 package com.asm2318.creditcalc;
 
 import java.util.LinkedList;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,5 @@ import org.springframework.stereotype.Repository;
 public interface CrcUserRepository extends JpaRepository <CrcUser, String> {
     CrcUser findByEmail(String email);
     CrcUser findByUsername(String login);
+    List<CrcUser> findAll();
 }

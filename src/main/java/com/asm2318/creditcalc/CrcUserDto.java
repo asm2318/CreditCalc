@@ -26,9 +26,7 @@ public class CrcUserDto {
     @NotEmpty
     private String email;
     
-    @NotNull
-    @NotEmpty
-    private List<CrcRole> roles;
+    private CrcRole role;
     
     public String getLogin(){
         return login;
@@ -58,11 +56,11 @@ public class CrcUserDto {
         this.email = email;
     }
     
-    public List<CrcRole> getRoles(){
-        return roles;
+    public CrcRole getRole(){
+        return role;
     }
-    public void setRoles(List<CrcRole> roles){
-        this.roles = roles;
+    public void setRole(CrcRole role){
+        this.role = role;
     }
     
 }

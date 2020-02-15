@@ -14,27 +14,18 @@ import java.util.Set;
 @Table(name="USERS")
 public class CrcUser {
 
-    private String username;
-    private String email;
-    private String password;
-    private String enabled;
-    private List<CrcRole> roles;
+    private String username, email, password, enabled;
+    private CrcRole role;
     
 
     public CrcUser(){}
 
-    public CrcUser(String username, String email, String password, String enabled) {
+    public CrcUser(String username, String email, String password, String enabled, CrcRole role) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.enabled = enabled;
-    }
-
-    public CrcUser(String username, String email, String password, List<CrcRole> roles) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.roles = roles;
+        this.role = role;
     }
 
     @Id
@@ -70,13 +61,13 @@ public class CrcUser {
         this.enabled = enabled;
     }
 
-    @ManyToMany
+    @OneToOne
     @JoinTable(name = "USERS_ROLES", joinColumns = @JoinColumn(name = "USERNAME"), inverseJoinColumns = @JoinColumn(name = "ROLE"))
-    public List<CrcRole> getRoles() {
-        return roles;
+    public CrcRole getRole() {
+        return role;
     }
 
-    public void setRoles(List<CrcRole> roles) {
-        this.roles = roles;
+    public void setRole(CrcRole role) {
+        this.role = role;
     }
 }
