@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head><title>Регистрация</title></head>
+
+<body>
+    <p><font color="red"><span th:text="${errorMessage}"></span></font></p>
+    <div>
+        <form method="post" th:action="@{/registration}" enctype="utf8">
+            <h2>Регистрация</h2>
+            <p>Введите адрес электронной почты:</p>
+            <input type="email" placeholder="user@e-mail.ru" th:value="${email}" name="email" th:required="required"/>
+            <p>Придумайте логин и пароль:</p>
+            <div>
+                <input type="text" name="username" placeholder="Логин" th:value="${username}" th:required="required"/>
+            </div>
+    
+            <div>
+                <input type="password" name="password" placeholder="Пароль" th:required="required"/>
+            </div>
+        
+            <div>
+                <input type="password" name="matchingPassword" placeholder="Подтвердите пароль" th:required="required"/>
+            </div>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+    </div>
+</body>
+</html>

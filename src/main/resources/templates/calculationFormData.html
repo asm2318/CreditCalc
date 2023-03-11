@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Параметры для расчета</title>
+    </head>
+    <body>
+        <div>User: <span th:text="${
+            T(org.springframework.security.core.context.SecurityContextHolder)
+            .context.authentication.principal.username}"></span></div>
+        <form method="post" action="/calculation">
+        <p><b>Сумма кредита: <input type="number" min="100000" th:value="${sum}" name="sum" th:required="required"/></b></p>
+	<p><b>Процентная ставка: <input type="number" min="0.01" th:value="${rate}" step="0.01" name="rate" th:required="required"/></b></p>
+        <p><b>Тип платежа: <select size="1" name="annuity" id="annuity"> 
+                    <option value="true">Аннуитетный</option>
+                    <option value="false">Дифференцированный</option>
+                </select></b></p>
+        <p><b>Срок кредита (мес.): <input type="number" min="6" th:value="${term}" pattern="^[\d]+$" step="1" name="term" th:required="required"/></b></p>
+        <p><b>Дата первого платежа: <input type="date" id="firstPayDate" th:value="${firstPayDate}" name="firstPayDate" th:required="required"/></b></p>
+	<button type="submit">Рассчитать</button>
+        </form>  
+        <p><font color="red"><span th:text="${errorMessage}"></span></font></p>
+        <script th:inline="javascript">
+            setSelectedValue([[${annuity}]])
+            function setSelectedValue(valueToSet) {
+                var paymentTypes = document.getElementById("annuity");
+                for (var i = 0; i < paymentTypes.options.length; i++) {
+                    if (paymentTypes.options[i].value === valueToSet) {
+                        paymentTypes.options[i].selected = true;
+                        return;
+                    }
+                }
+            }
+        </script>
+    </body>
+</html>

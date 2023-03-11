@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Страница администратора</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <input type="hidden" th:value="${requestsHistory}" id="requestsHistory"/>
+        <input type="hidden" th:value="${usersList}" id="usersList"/>
+        <input type="hidden" th:value="${rolesList}" id="rolesList"/>
+        <p>Страница администратор: <span th:text="${
+            T(org.springframework.security.core.context.SecurityContextHolder)
+            .context.authentication.principal.username}"></span></p>
+        <form method="get" action="/requestsHistory" id="historyButton">
+                <button type="submit">Итория запросов</button>
+                <b>Начало периода:</b><input type="date" name="dateStart" th:value="${dateStart}" form="historyButton"/>
+                <b>Конец периода:</b><input type="date" name="dateEnd" th:value="${dateEnd}" form="historyButton"/>
+        </form>
+        
+        <form method="get" action="/usersList">
+                <button type="submit">Учетные записи</button>
+        </form>
+        
+        <div class="container">
+            <div class="table-responsive" id="tableForm">
+            </div>
+        </div>
+        
+        <script>
+            if (!!$('#requestsHistory').val()) {
+                requestsHistoryTable();
+            } else if (!!$('#usersList').val()) {
+                usersTable(getRolesList());
+            }
+
+            function requestsHistoryTable(){
+                var tableHeader = '<h1>Статистика запросов</h1>' +
+                '<br />' +
+                '<table class="table table-bordered table-striped" id="historyContents">' +
+                    '<tr>' +
+                        '<th>Время запроса</th>' +
+                        '<th>Пользователь</th>' +
+                        '<th>ip-адрес</th>' +
+                        '<th>URI</th>' +
+                        '<th>Параметры</th>' +
+                        '<th>Результат</th>' +
+                        '<th>Размер результата, байт</th>' +
+                    '</tr>' +
+                '</table>';
+                $('#tableForm').append(tableHeader);
+                
+                var data = $("#requestsHistory").val();
+                var object = JSON.parse(data);
+                    $.each(object, function(key, value){
+                        var tableRow = '<tr>' +
+                        '<td>'+value.createTs+'</td>' +
+                        '<td>'+value.username+'</td>' +
+                        '<td>'+value.ipAddress+'</td>' +
+                        '<td>'+value.uri+'</td>' +
+                        '<td>'+value.params+'</td>' +
+                        '<td>'+value.resultName+'</td>' +
+                        '<td>'+value.resultSize+'</td>' +
+                        '</tr>';
+                        $('#historyContents').append(tableRow);
+                    });
+            }
+            
+            function usersTable(rolesList){
+                var tableHeader = '<h1>Список пользователей</h1>' +
+                '<br />' +
+                    '<table class="table table-bordered table-striped" id="usersContents">' +
+                        '<tr>' +
+                            '<th>Логин</th>' +
+                            '<th>E-mail</th>' +
+                            '<th>Статус</th>' +
+                            '<th>Роль</th>' +
+                        '</tr>' +
+                    '</table>';
+                        
+                $('#tableForm').append(tableHeader);
+                
+                var data = $("#usersList").val();
+                var object = JSON.parse(data);
+                    $.each(object, function(key, value){
+                        var tableRow = '<tr>' +
+                        '<td>'+value.username+'</td>' +
+                        '<td>'+value.email+'</td>' +
+                        '<td>'+value.status+'</td>' +
+                        '<td><form method="post" action="/roleUpdate">'+
+                            '<select size="1" id="rolestate_'+value.userId+'" name="updateRoleId">'+ 
+                            rolesList + '</select>' +
+                            '<input type="hidden" name="userId" value="'+value.userId+'"/>'+
+                            '<button type="submit">Изменить</button>'+
+                            '</form></td>' +
+                        '</tr>';
+                        $('#usersContents').append(tableRow);
+                        $("#rolestate_"+value.userId).val(value.roleId).change();
+                    });
+            }
+            
+            function getRolesList() {
+                var data = $("#rolesList").val();
+                var object = JSON.parse(data);
+                var line = '';
+                
+                $.each(object, function(key, value){
+                        line += '<option value="' + value.roleId + '">' + value.roleName + '</option>';  
+                });
+                return line;
+            }
+            
+        </script>
+    </body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>График погашения</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <input type="hidden" th:value="${result}" id="result"/>
+        <div class="container">
+            <div class="table-responsive">
+                <h1>Вводные данные</h1>
+                <br />
+                
+                <table class="table table-bordered table-striped" id="basics">
+                    <tr>
+                        <th>Сумма кредита</th>
+                        <th>%</th>
+                        <th>Тип платежа</th>
+                        <th>Срок, мес.</th>
+                        <th>Дата первого платежа</th>
+                    </tr>
+                </table>
+                <br />
+                <h1>График погашения</h1>
+                <br />
+                
+                <table class="table table-bordered table-striped" id="schedule">
+                    <tr>
+                        <th>Дата платежа</th>
+                        <th>Сумма платежа</th>
+                        <th>Процентная часть</th>
+                        <th>Основной долг</th>
+                        <th>Остаток долга</th>
+                    </tr>
+                </table>
+            </div>
+            
+            <form method="get" action="/calculationNew">
+                <input type="hidden" th:value="${sum}" name="sum"/>
+                <input type="hidden" th:value="${rate}" name="rate"/>
+                <input type="hidden" th:value="${term}" name="term"/>
+                <input type="hidden" th:value="${firstPayDate}" name="firstPayDate"/>
+                <input type="hidden" th:value="${annuity}" name="annuity"/>
+                <button type="submit">Новый расчет</button>
+            </form>
+            
+        </div>
+        <script>
+            fillTables([[${sum}]], [[${rate}]], [[${term}]], [[${annuity}]])
+                    
+            function fillTables(sum, rate, term, annuity, firstPayDate){
+                var data = $("#result").val();
+                var object = JSON.parse(data);
+                var basic_data = '';
+                    basic_data += '<tr>';
+                    basic_data += '<td>'+sum+'</td>';
+                    basic_data += '<td>'+rate+'</td>';
+                    if(annuity === true){
+                        basic_data += '<td>'+"Аннуитетный"+'</td>';
+                    }else{
+                        basic_data += '<td>'+"Дифференцированный"+'</td>';
+                    }
+                    basic_data += '<td>'+term+'</td>';
+                    basic_data += '<td>'+object.firstPayDate+'</td>';
+                    basic_data += '</tr>';
+                $('#basics').append(basic_data);
+               
+                var schedule_object = object.schedule;
+                
+                    $.each(schedule_object, function(key, value){
+                        var schedule_data = '';
+                        schedule_data += '<tr>';
+                        schedule_data += '<td>'+value.payDate+'</td>';
+                        schedule_data += '<td>'+value.paymentTotal+'</td>';
+                        schedule_data += '<td>'+value.paymentPercent+'</td>';
+                        schedule_data += '<td>'+value.paymentBasic+'</td>';
+                        schedule_data += '<td>'+value.rest+'</td>';
+                        schedule_data += '</tr>';
+                        $('#schedule').append(schedule_data);
+                    });
+                
+                var schedule_totals = object.totals;
+                var total_values = '';
+                total_values += '<tr>';
+                total_values += '<td><b>Итого</b></td>';
+                total_values += '<td><b>'+schedule_totals.totalsPaymentTotal+'</b></td>';
+                total_values += '<td><b>'+schedule_totals.totalsPaymentPercent+'</b></td>';
+                total_values += '<td><b>'+schedule_totals.totalsPaymentBasic+'</b></td>';
+                total_values += '<td/></tr>';
+                $('#schedule').append(total_values);
+            }   
+        </script>  
+    </body>
+</html>
+
